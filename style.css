@@ -158,3 +158,10 @@
   #Popular, #Upcoming, #Estadisticas{
         display: none;
   }
+
+  #myChart{
+    display: flex;
+    width: 200px;
+    height: 500px;
+
+  }

@@ -8,7 +8,13 @@
     <title>The Movie SPA </title>
     <link rel="stylesheet" href="style.css" type="text/css">
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.2.1/chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.3.0/chart.min.js"
+        integrity="sha512-yadYcDSJyQExcKhjKSQOkBKy2BLDoW6WnnGXCAkCoRlpHGpYuVuBqGObf3g/TdB86sSbss1AOP4YlGSb6EKQPg=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.3.0/chart.min.js"
+        integrity="sha512-yadYcDSJyQExcKhjKSQOkBKy2BLDoW6WnnGXCAkCoRlpHGpYuVuBqGObf3g/TdB86sSbss1AOP4YlGSb6EKQPg=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
 </head>
 
 
@@ -19,8 +25,8 @@
         <a href="#Home" onclick="obtener('movie/top_rated')">Home</a>
         <a href="#Popular" onclick="obtener('tv/popular')">Series</a>
         <a href="#Upcoming" onclick="obtener('movie/upcoming')">Upcoming</a>
-        <a href="#Estadisticas"> Estadisticas</a>
-        <input id="searchbar" onkeyup="busqueda()" name="busqueda" type="text" placeholder="Busca lo que quieras">
+        <a href="#Estadisticas" onclick="obtenerEstadisticas(); this.onclick=null;"> Estadisticas</a>
+        <input id=" searchbar" onkeyup="busqueda()" name="busqueda" type="text" placeholder="Busca lo que quieras">
     </div>
 
     <div class="head-body">
@@ -54,8 +60,9 @@
 
     <!-- Botones -->
     <div id="btn_container">
-        <button id="btn-back" disabled onclick="obtener('upcoming', {page: CURRENT_PAGE - 1})">Anterior</button>
-        <button onclick="obtener('upcoming', {page: CURRENT_PAGE + 1})">Siguiente</button>
+        <button id="btn-back" disabled onclick="obtener('movie/upcoming', {page: CURRENT_PAGE - 1})">Anterior</button>
+        <button id="btn-mid"></button>
+        <button onclick="obtener('movie/upcoming', {page: CURRENT_PAGE + 1})">Siguiente</button>
     </div>
 
     <!-- Loading-->
@@ -66,89 +73,151 @@
         </div>
     </div>
 
+</body>
 
 
+<script>
+    const API_URL = 'https://api.themoviedb.org/3/';
+    const API_KEY = '569da2e6bc2ce68423e19a5400fa0483';
+    let CURRENT_PAGE = 1;
+    let ejeX = [],
+        ejeY = [];
 
-
-
-
-    <script>
-        const API_URL = 'https://api.themoviedb.org/3/';
-        const API_KEY = '569da2e6bc2ce68423e19a5400fa0483';
-        let CURRENT_PAGE = 1;
-
-        function getEndpoint(endpoint) {
-            if (endpoint == "movie/top_rated") {
-                return "Top Rated";
-            }
-
-            if (endpoint == "movie/upcoming") {
-                return "Upcoming";
-            }
-
-            if (endpoint == "tv/popular") {
-                return "Series";
-            }
-
-            return "error";
+    function getEndpoint(endpoint) {
+        if (endpoint == "movie/top_rated") {
+            return "Top Rated";
         }
 
-        function getAlfa(endpoint) {
-            if (endpoint == "tv/popular") {
-                return "name";
-            }
-            return "title";
+        if (endpoint == "movie/upcoming") {
+            return "Upcoming";
         }
 
-        function obtener(endpoint, params) {
-            document.getElementById('wrapper-login').style.display = 'flex';
-            let alfa = "";
-            let headBody = document.getElementById('head-body');
-            // Vamos a tener que hacer una transformacion del string. Parche = if-else
-
-            headBody.innerHTML = getEndpoint(endpoint);
-            alfa = getAlfa(endpoint);
-            const _params = params || {};
-            const _page = _params.page || 1;
-            const _lang = _params.lang || 'en-US';
-
-            CURRENT_PAGE = _page;
-
-            document.getElementById('btn-back').disabled = (CURRENT_PAGE == 1)
-
-            const _url = new URL(`${API_URL}${endpoint}`);
-            _url.searchParams.append('api_key', API_KEY);
-            _url.searchParams.append('language', _lang);
-            _url.searchParams.append('page', _page);
-
-            axios.get(_url)
-                .then(response => {
-                    console.log(response);
-                    printItem(response.data.results, alfa);
-                    document.getElementById('wrapper-login').style.display = 'none';
-
-                })
-                .catch(error => console.log(error));
+        if (endpoint == "tv/popular") {
+            return "Series";
         }
+        return "error";
+    }
 
-        //Proyecto optimizacion print = Fail
-        function printItem(item, param) {
-            const container = document.getElementById('container')
-            container.innerHTML = '';
+    function getAlfa(endpoint) {
+        if (endpoint == "tv/popular") {
+            return "name";
+        }
+        return "title";
+    }
 
-            item.forEach(item => {
-                container.innerHTML += `
+    function obtener(endpoint, params) {
+        document.getElementById('wrapper-login').style.display = 'flex';
+        let alfa = "";
+        let headBody = document.getElementById('head-body');
+        // Vamos a tener que hacer una transformacion del string. Parche = if-else
+
+        headBody.innerHTML = getEndpoint(endpoint);
+        alfa = getAlfa(endpoint);
+        const _params = params || {};
+        const _page = _params.page || 1;
+        const _lang = _params.lang || 'en-US';
+
+        CURRENT_PAGE = _page;
+
+
+
+        document.getElementById('btn-back').disabled = (CURRENT_PAGE == 1)
+        document.getElementById('btn-mid').innerHTML = CURRENT_PAGE
+
+
+        const _url = new URL(`${API_URL}${endpoint}`);
+        _url.searchParams.append('api_key', API_KEY);
+        _url.searchParams.append('language', _lang);
+        _url.searchParams.append('page', _page);
+
+        axios.get(_url)
+            .then(response => {
+                printItem(response.data.results, alfa);
+                document.getElementById('wrapper-login').style.display = 'none';
+
+            })
+            .catch(error => console.log(error));
+    }
+    //Proyecto optimizacion print = Fail
+    function printItem(item, param) {
+        const container = document.getElementById('container')
+        container.innerHTML = '';
+
+        item.forEach(item => {
+            container.innerHTML += `
             <div class="card">
             <img src=" https://image.tmdb.org/t/p/w500/${item.poster_path}"/>
             <span>Nota: ${item.vote_average}</span>
             <h5>${param === 'title' ? item.original_title.charAt(0).toUpperCase() + item.original_title.slice(1) : item.original_name.charAt(0).toUpperCase() + item.original_name.slice(1)}</h5>
             </card>
           `;
-            });
-        }
+        });
+    }
+
+    function obtenerEstadisticas() {
+        //Deberia ir el cargando: document.getElementById('wrapper-login').style.display = 'flex';
+        //Reseteamos pagina
+        document.getElementById('container').innerHTML = '';
+        document.getElementById('btn_container').innerHTML = '';
+        document.getElementById('head-body').innerHTML = "Estadisticas";
+        // Canvas
+        document.getElementById('container').innerHTML = '<canvas id="myChart"width="400" height="400"></canvas>';
 
 
-        /*
+        //https://api.themoviedb.org/3/tv/popular?api_key=569da2e6bc2ce68423e19a5400fa0483&language=en-US&page=1
+        [ejeX, ejeY] = responseAxio(`${API_URL}tv/popular/?api_key=${API_KEY}&language=en-US&page=1`);
+        printEstadisticas(ejeX, ejeY);
+    }
+
+    function responseAxio(url) {
+        axios.get(url)
+            .then(response => {
+                console.log(response);
+                [ejeX, ejeY] = valoresGrafica(response.data.results);
+            })
+            .catch(error => console.log(error));
+        return [ejeX, ejeY];
+    }
+
+    function valoresGrafica(item) {
+        item.forEach(element => {
+            ejeX.push(element.original_name);
+            ejeY.push(element.vote_average);
+        })
+        return [ejeX, ejeY];
+    }
+
+    function printEstadisticas(ejeX, ejeY) {
+        var ctx = document.getElementById('myChart');
+        var myChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ejeX,
+                datasets: [{
+                    label: 'Notas',
+                    data: ejeY,
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                },
+                elements: {
+                    bar: {
+                        backgroundColor: 'rgb(187, 70, 49)',
+                        borderWidth: 1
+                    }
+                }
+            }
+        });
+    }
+
+
+
+
+    /*
         const coche = {
             puertas: 4,
             ruedas: 4
@@ -158,42 +227,7 @@
 
         conche['ruedas']
 */
-
-
-        function printPelicula(pelicula) {
-            const container = document.getElementById('container')
-            container.innerHTML = '';
-
-            pelicula.forEach(pelicula => {
-                container.innerHTML += `
-          <div class="card">
-          <img src=" https://image.tmdb.org/t/p/w500/${pelicula.poster_path}"/>
-          <span>Nota: ${pelicula.vote_average}</span>
-          <h5>${pelicula.original_title.charAt(0).toUpperCase() + pelicula.original_title.slice(1)}</h5>
-          </card>
-        `;
-            });
-        }
-
-        function printSerie(serie) {
-            const container = document.getElementById('container')
-            serie.forEach(serie => {
-                container.innerHTML += `
-          <div class="card">
-          <img src=" https://image.tmdb.org/t/p/w500/${serie.poster_path}"/>
-          <span>Nota: ${serie.vote_average}</span>
-          <h5>${serie.original_name.charAt(0).toUpperCase() + serie.original_name.slice(1)}</h5>
-          </card>
-        `;
-            });
-        }
-
-
-    </script>
-
-
-
-</body>
+</script>
 
 
 
