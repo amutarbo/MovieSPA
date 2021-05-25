@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Movie SPA </title>
+    <link rel="stylesheet" href="style.css" type="text/css">
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.2.1/chart.min.js"></script>
+</head>
+
+
+<body onload="obtener('movie/top_rated')">
+
+    <!-- ONload = DomContentLoaded -->
+    <div class="topnav">
+        <a href="#Home" onclick="obtener('movie/top_rated')">Home</a>
+        <a href="#Popular" onclick="obtener('tv/popular')">Series</a>
+        <a href="#Upcoming" onclick="obtener('movie/upcoming')">Upcoming</a>
+        <a href="#Estadisticas"> Estadisticas</a>
+        <input id="searchbar" onkeyup="busqueda()" name="busqueda" type="text" placeholder="Busca lo que quieras">
+    </div>
+
+    <div class="head-body">
+        <h1 id="head-body"> Top Rated</h1>
+    </div>
+
+
+    <section id="Home">
+        <div id="container">
+
+        </div>
+    </section>
+
+    <section id="Popular">
+        <div id="container">
+
+        </div>
+    </section>
+
+    <section id="Upcoming">
+        <div id="container">
+
+        </div>
+    </section>
+
+    <section id="Estadisticas">
+        <div id="container">
+
+        </div>
+    </section>
+
+    <!-- Botones -->
+    <div id="btn_container">
+        <button id="btn-back" disabled onclick="obtener('upcoming', {page: CURRENT_PAGE - 1})">Anterior</button>
+        <button onclick="obtener('upcoming', {page: CURRENT_PAGE + 1})">Siguiente</button>
+    </div>
+
+    <!-- Loading-->
+    <div id="wrapper-login">
+        <div id="loading">
+            <div id="spinner"></div>
+            <div>Cargando...</div>
+        </div>
+    </div>
+
+
+
+
+
+
+
+    <script>
+        const API_URL = 'https://api.themoviedb.org/3/';
+        const API_KEY = '569da2e6bc2ce68423e19a5400fa0483';
+        let CURRENT_PAGE = 1;
+
+        function getEndpoint(endpoint) {
+            if (endpoint == "movie/top_rated") {
+                return "Top Rated";
+            }
+
+            if (endpoint == "movie/upcoming") {
+                return "Upcoming";
+            }
+
+            if (endpoint == "tv/popular") {
+                return "Series";
+            }
+
+            return "error";
+        }
+
+        function getAlfa(endpoint) {
+            if (endpoint == "tv/popular") {
+                return "name";
+            }
+            return "title";
+        }
+
+        function obtener(endpoint, params) {
+            document.getElementById('wrapper-login').style.display = 'flex';
+            let alfa = "";
+            let headBody = document.getElementById('head-body');
+            // Vamos a tener que hacer una transformacion del string. Parche = if-else
+
+            headBody.innerHTML = getEndpoint(endpoint);
+            alfa = getAlfa(endpoint);
+            const _params = params || {};
+            const _page = _params.page || 1;
+            const _lang = _params.lang || 'en-US';
+
+            CURRENT_PAGE = _page;
+
+            document.getElementById('btn-back').disabled = (CURRENT_PAGE == 1)
+
+            const _url = new URL(`${API_URL}${endpoint}`);
+            _url.searchParams.append('api_key', API_KEY);
+            _url.searchParams.append('language', _lang);
+            _url.searchParams.append('page', _page);
+
+            axios.get(_url)
+                .then(response => {
+                    console.log(response);
+                    printItem(response.data.results, alfa);
+                    document.getElementById('wrapper-login').style.display = 'none';
+
+                })
+                .catch(error => console.log(error));
+        }
+
+        //Proyecto optimizacion print = Fail
+        function printItem(item, param) {
+            const container = document.getElementById('container')
+            container.innerHTML = '';
+
+            item.forEach(item => {
+                container.innerHTML += `
+            <div class="card">
+            <img src=" https://image.tmdb.org/t/p/w500/${item.poster_path}"/>
+            <span>Nota: ${item.vote_average}</span>
+            <h5>${param === 'title' ? item.original_title.charAt(0).toUpperCase() + item.original_title.slice(1) : item.original_name.charAt(0).toUpperCase() + item.original_name.slice(1)}</h5>
+            </card>
+          `;
+            });
+        }
+
+
+        /*
+        const coche = {
+            puertas: 4,
+            ruedas: 4
+        }
+
+        coche.ruedas
+
+        conche['ruedas']
+*/
+
+
+        function printPelicula(pelicula) {
+            const container = document.getElementById('container')
+            container.innerHTML = '';
+
+            pelicula.forEach(pelicula => {
+                container.innerHTML += `
+          <div class="card">
+          <img src=" https://image.tmdb.org/t/p/w500/${pelicula.poster_path}"/>
+          <span>Nota: ${pelicula.vote_average}</span>
+          <h5>${pelicula.original_title.charAt(0).toUpperCase() + pelicula.original_title.slice(1)}</h5>
+          </card>
+        `;
+            });
+        }
+
+        function printSerie(serie) {
+            const container = document.getElementById('container')
+            serie.forEach(serie => {
+                container.innerHTML += `
+          <div class="card">
+          <img src=" https://image.tmdb.org/t/p/w500/${serie.poster_path}"/>
+          <span>Nota: ${serie.vote_average}</span>
+          <h5>${serie.original_name.charAt(0).toUpperCase() + serie.original_name.slice(1)}</h5>
+          </card>
+        `;
+            });
+        }
+
+
+    </script>
+
+
+
+</body>
+
+
+
+
+</html>
